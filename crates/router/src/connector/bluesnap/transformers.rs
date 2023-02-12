@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
+use error_stack::{IntoReport, ResultExt};
 use crate::{
     core::errors,
     pii::PeekInterface,
     types::{self, api, storage::enums},
+    utils::OptionExt,
 };
 
 //TODO: Fill the struct with respective fields
@@ -10,48 +12,36 @@ use crate::{
 #[serde(rename_all = "camelCase")]
 pub struct BluesnapPaymentsRequest {
     amount: String,
-    credit_card: Card,
+    wallet: WalletData,
     currency: String,
     soft_descriptor: Option<String>,
     card_transaction_type: String,
-    card_holder_info: CardHolderInfo,
 }
 
 #[derive(Default, Debug, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct Card {
-    card_number: String,
-    expiration_month: String,
-    expiration_year: String,
-    security_code: String,
-}
-
-#[derive(Default, Debug, Serialize, Eq, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct CardHolderInfo {
-    first_name: String,
+pub struct WalletData {
+    wallet_type: String,
+    encoded_payment_token: String,
 }
 
 impl TryFrom<&types::PaymentsAuthorizeRouterData> for BluesnapPaymentsRequest  {
     type Error = error_stack::Report<errors::ConnectorError>;
     fn try_from(item: &types::PaymentsAuthorizeRouterData) -> Result<Self,Self::Error> {
         match item.request.payment_method_data {
-            api::PaymentMethod::Card(ref ccard) => {
+            api::PaymentMethod::Wallet(ref wallet_data) => {
                 let auth_capture = "AUTH_ONLY".to_string();
                 let payment_request = Self {
                     amount: item.request.amount.to_string(),
-                    credit_card: Card {
-                        card_number: ccard.card_number.peek().clone(),
-                        expiration_month: ccard.card_exp_month.peek().clone(),
-                        expiration_year: ccard.card_exp_year.peek().clone(),
-                        security_code: ccard.card_cvc.peek().clone(),
+                    wallet: WalletData {
+                        wallet_type: wallet_data.issuer_name.clone().to_string(),
+                        encoded_payment_token: wallet_data.token.clone().get_required_value("token")
+                        .change_context(errors::ConnectorError::RequestEncodingFailed)
+                        .attach_printable("No token passed")?,
                     },
                     currency: item.request.currency.to_string(),
                     soft_descriptor: item.description.clone(),
                     card_transaction_type: auth_capture,
-                    card_holder_info: CardHolderInfo {
-                        first_name: ccard.card_holder_name.peek().clone(),
-                    },
                 };
                 Ok(payment_request)
             }
