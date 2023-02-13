@@ -42,7 +42,7 @@ locker_decryption_key1 = ""
 locker_decryption_key2 = ""
 
 [connectors.supported]
-wallets = ["klarna", "braintree", "applepay"]
+wallets = ["klarna", "braintree", "applepay", "trustly", "skrill"]
 cards = [
     "aci",
     "adyen",
