@@ -19,7 +19,7 @@ key1 = "Merchant id"
 api_secret = "Secret key"
 
 [shift4]
-api_key = "Bearer MyApiKey"
+api_key = "Basic c2tfdGVzdF93cjhMYjdqd1FNTEp1STJCMHBoSFJMVDQ6"
 
 [worldpay]
 api_key = "Bearer MyApiKey"
