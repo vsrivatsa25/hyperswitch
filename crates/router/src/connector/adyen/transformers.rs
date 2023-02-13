@@ -495,8 +495,7 @@ fn get_payment_method_data(
                         .ok_or_else(utils::missing_field_err("token"))?,
                 };
                 Ok(AdyenPaymentMethod::Gpay(gpay_data))
-            }
-
+            },
             api_enums::WalletIssuer::ApplePay => {
                 let apple_pay_data = AdyenApplePay {
                     payment_type: PaymentType::Applepay,
@@ -506,13 +505,14 @@ fn get_payment_method_data(
                         .ok_or_else(utils::missing_field_err("token"))?,
                 };
                 Ok(AdyenPaymentMethod::ApplePay(apple_pay_data))
-            }
+            },
             api_enums::WalletIssuer::Paypal => {
                 let wallet = AdyenPaypal {
                     payment_type: PaymentType::Paypal,
                 };
                 Ok(AdyenPaymentMethod::AdyenPaypal(wallet))
-            }
+            },
+            _ => Err(errors::ConnectorError::NotImplemented("Payment methods".to_string()).into()),
         },
         api_models::payments::PaymentMethod::PayLater(ref pay_later_data) => match pay_later_data {
             api_models::payments::PayLaterData::KlarnaRedirect { .. } => {
