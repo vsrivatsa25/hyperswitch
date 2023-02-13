@@ -14,12 +14,28 @@ pub struct Shift4PaymentsRequest {
     description: Option<String>,
     captured: Option<bool>,
     payment_method: Option<Wallet>,
+    flow: Option<Flow>,
+    customer_id: Option<String>,
 }
 
 #[derive(Default, Debug, Serialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct Flow{
+    return_url: String,
+}
+
+#[derive(Default, Debug, Serialize, Eq, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct Wallet{
     customer_id: String,
+    #[serde(rename = "type")]
     payment_type: String,
+    billing: Billing,
+}
+
+#[derive(Default, Debug, Serialize, Eq, PartialEq)]
+pub struct Billing{
+    name: String,
 }
 
 #[derive(Default, Debug, Serialize, Eq, PartialEq)]
@@ -55,6 +71,8 @@ impl TryFrom<&types::PaymentsAuthorizeRouterData> for Shift4PaymentsRequest {
                     description: item.description.clone(),
                     captured: Some(submit_for_settlement),
                     payment_method: None,
+                    flow: None,
+                    customer_id: None,
                 };
                 Ok(payment_request)
             },
@@ -66,9 +84,16 @@ impl TryFrom<&types::PaymentsAuthorizeRouterData> for Shift4PaymentsRequest {
                     card: None,
                     captured: None,
                     payment_method: Some(Wallet {
-                        customer_id: api_models::customers::generate_customer_id(),
+                        customer_id: "cust_Tv7H3qkjzGlZpxYr0VeRZwXP".to_string(),
                         payment_type: wallet_data.issuer_name.to_string(),
+                        billing: Billing {
+                            name: "Customer".to_string(),
+                        }
                     }),
+                    customer_id: Some("cust_Tv7H3qkjzGlZpxYr0VeRZwXP".to_string()),
+                    flow: Some(Flow {
+                        return_url: item.router_return_url.clone().unwrap_or("".to_string()),
+                    })
                 };
                 Ok(payment_request)
             },
