@@ -377,10 +377,15 @@ impl TryFrom<&types::PaymentsAuthorizeRouterData> for AdyenPaymentRequest {
                     };
                     Ok(AdyenPaymentMethod::ApplePay(apple_pay_data))
                 }
+
                 api_enums::WalletIssuer::Paypal => {
                     let wallet = AdyenPaypal { payment_type };
                     Ok(AdyenPaymentMethod::AdyenPaypal(wallet))
                 }
+                
+                _ => Err(errors::ConnectorError::MissingRequiredField {
+                    field_name: "payment_method",
+                })
             },
             _ => Err(errors::ConnectorError::MissingRequiredField {
                 field_name: "payment_method",
