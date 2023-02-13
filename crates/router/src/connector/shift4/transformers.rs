@@ -10,10 +10,10 @@ use crate::{
 #[serde(rename_all = "camelCase")]
 pub struct Shift4PaymentsRequest {
     amount: String,
-    card: Card,
+    card: Option<Card>,
     currency: String,
     description: Option<String>,
-    captured: bool,
+    captured: Option<bool>,
 }
 
 #[derive(Default, Debug, Serialize, Eq, PartialEq)]
@@ -39,18 +39,28 @@ impl TryFrom<&types::PaymentsAuthorizeRouterData> for Shift4PaymentsRequest {
                 );
                 let payment_request = Self {
                     amount: item.request.amount.to_string(),
-                    card: Card {
+                    card: Some(Card {
                         number: ccard.card_number.peek().clone(),
                         exp_month: ccard.card_exp_month.peek().clone(),
                         exp_year: ccard.card_exp_year.peek().clone(),
                         cardholder_name: ccard.card_holder_name.peek().clone(),
-                    },
+                    }),
                     currency: item.request.currency.to_string(),
                     description: item.description.clone(),
-                    captured: submit_for_settlement,
+                    captured: Some(submit_for_settlement),
                 };
                 Ok(payment_request)
-            }
+            },
+            api:: PaymentMethod::Wallet(ref _wallet_data) => {
+                let payment_request = Self {
+                    amount: item.request.amount.to_string(),
+                    currency: item.request.currency.to_string(),
+                    description: item.description.clone(),
+                    card: None,
+                    captured: None,
+                };
+                Ok(payment_request)
+            },
             _ => Err(
                 errors::ConnectorError::NotImplemented("Current Payment Method".to_string()).into(),
             ),
