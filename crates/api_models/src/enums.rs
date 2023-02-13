@@ -420,6 +420,8 @@ pub enum WalletIssuer {
     GooglePay,
     ApplePay,
     Paypal,
+    Skrill,
+    Trustly,
 }
 
 #[derive(
