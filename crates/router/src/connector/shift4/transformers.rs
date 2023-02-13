@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-
 use crate::{
     core::errors,
     pii::PeekInterface,
@@ -14,6 +13,13 @@ pub struct Shift4PaymentsRequest {
     currency: String,
     description: Option<String>,
     captured: Option<bool>,
+    payment_method: Option<Wallet>,
+}
+
+#[derive(Default, Debug, Serialize, Eq, PartialEq)]
+pub struct Wallet{
+    customer_id: String,
+    payment_type: String,
 }
 
 #[derive(Default, Debug, Serialize, Eq, PartialEq)]
@@ -48,16 +54,21 @@ impl TryFrom<&types::PaymentsAuthorizeRouterData> for Shift4PaymentsRequest {
                     currency: item.request.currency.to_string(),
                     description: item.description.clone(),
                     captured: Some(submit_for_settlement),
+                    payment_method: None,
                 };
                 Ok(payment_request)
             },
-            api:: PaymentMethod::Wallet(ref _wallet_data) => {
+            api:: PaymentMethod::Wallet(ref wallet_data) => {
                 let payment_request = Self {
                     amount: item.request.amount.to_string(),
                     currency: item.request.currency.to_string(),
                     description: item.description.clone(),
                     card: None,
                     captured: None,
+                    payment_method: Some(Wallet {
+                        customer_id: api_models::customers::generate_customer_id(),
+                        payment_type: wallet_data.issuer_name.to_string(),
+                    }),
                 };
                 Ok(payment_request)
             },
